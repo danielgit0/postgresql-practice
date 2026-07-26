@@ -1,0 +1,75 @@
+# ==========================================================
+# IntelliJ IDEA
+# ==========================================================
+
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# ==========================================================
+# PostgreSQL / Podman volumes
+# ==========================================================
+
+# Named volumes mounted locally
+data/
+
+# PostgreSQL data directories
+pgdata/
+postgres-data/
+
+# Local database storage
+*.db
+*.sqlite
+*.sqlite3
+
+
+# ==========================================================
+# Podman / Docker generated files
+# ==========================================================
+
+# Container logs
+*.log
+
+# ==========================================================
+# PostgreSQL generated files
+# ==========================================================
+
+# Backups
+*.dump
+*.backup
+*.sql.gz
+
+# Temporary SQL files
+*.tmp.sql
+
+
+# ==========================================================
+# Query / IDE generated files
+# ==========================================================
+
+.idea/dataSources/
+.idea/dataSources.xml
+.idea/sqlDataSources.xml
+.idea/workspace.xml
+.idea/usage.statistics.xml
+
+
+# ==========================================================
+# OS files
+# ==========================================================
+
+.DS_Store
+Thumbs.db
+
+
+# ==========================================================
+# General temporary files
+# ==========================================================
+
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
