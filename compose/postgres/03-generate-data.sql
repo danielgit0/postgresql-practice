@@ -16,7 +16,8 @@ CREATE OR REPLACE PROCEDURE generate_demo_data(
     p_audit_logs       int DEFAULT 10000,
     p_inventory        boolean DEFAULT true,
     p_payments         boolean DEFAULT true,
-    p_shipments        boolean DEFAULT true
+    p_shipments        boolean DEFAULT true,
+    p_logins_per_user  int DEFAULT 12  -- average logins per user
 )
 AS $$
 DECLARE
@@ -164,7 +165,7 @@ BEGIN
     -- ==========================================================
     RAISE NOTICE 'Step 3/11: Generating users...';
     
-    INSERT INTO users (email, username, first_name, last_name, phone, status, birth_date, country, city, preferences, created_at, updated_at, last_login)
+    INSERT INTO users (email, username, first_name, last_name, phone, status, birth_date, country, city, preferences, created_at, updated_at)
     SELECT 
         lower(f_name) || '.' || lower(l_name) || '.' || i || '@' || random_item(ARRAY['gmail.com', 'yahoo.com', 'outlook.com', 'protonmail.com', 'icloud.com']),
         lower(f_name) || '_' || lower(l_name) || '_' || i,
@@ -177,8 +178,7 @@ BEGIN
         city,
         random_json_preferences(),
         created_ts,
-        created_ts + (random() * (now() - created_ts)),
-        CASE WHEN random() > 0.15 THEN created_ts + (random() * (now() - created_ts)) ELSE NULL END
+        created_ts + (random() * (now() - created_ts))
     FROM (
         SELECT 
             i,
@@ -193,6 +193,33 @@ BEGIN
     -- Collect user IDs
     SELECT array_agg(id) INTO v_user_ids FROM users;
     v_total_users := array_length(v_user_ids, 1);
+
+    -- ==========================================================
+    -- 3b. USER LOGINS (login history per user)
+    -- ==========================================================
+    RAISE NOTICE 'Step 3b/11: Generating user login history...';
+
+    INSERT INTO user_logins (user_id, login_at, ip_address, device, successful)
+    SELECT
+        u.id,
+        -- Spread logins randomly between account creation and now
+        u.created_at + (random() * (now() - u.created_at)),
+        (
+            random_between(24, 220) || '.' ||
+            random_between(10, 240) || '.' ||
+            random_between(0,  254) || '.' ||
+            random_between(1,  254)
+        )::inet,
+        random_item(ARRAY['Chrome / Windows', 'Safari / macOS', 'Firefox / Linux',
+                          'Chrome / Android', 'Safari / iOS', 'Edge / Windows']),
+        -- 90% successful logins
+        random_weighted_item(ARRAY[true, false], ARRAY[90, 10])
+    FROM users u
+    -- Generate a variable number of logins per user (1 to 2×avg)
+    CROSS JOIN LATERAL generate_series(
+        1,
+        GREATEST(1, random_between(1, p_logins_per_user * 2))
+    ) AS login_n;
 
     -- ==========================================================
     -- 4. CATEGORIES & HIERARCHY

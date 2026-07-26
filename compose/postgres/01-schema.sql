@@ -102,8 +102,25 @@ CREATE TABLE users (
     preferences         JSONB,
 
     created_at          TIMESTAMPTZ DEFAULT now(),
-    updated_at          TIMESTAMPTZ DEFAULT now(),
-    last_login          TIMESTAMPTZ
+    updated_at          TIMESTAMPTZ DEFAULT now()
+);
+
+-- ==========================================================
+-- USER LOGINS
+-- ==========================================================
+
+CREATE TABLE user_logins (
+    id                  BIGSERIAL PRIMARY KEY,
+
+    user_id             UUID NOT NULL REFERENCES users(id),
+
+    login_at            TIMESTAMPTZ NOT NULL DEFAULT now(),
+
+    ip_address          INET,
+
+    device              VARCHAR(100),
+
+    successful          BOOLEAN NOT NULL DEFAULT true
 );
 
 -- ==========================================================
@@ -368,8 +385,14 @@ CREATE INDEX idx_users_email
 CREATE INDEX idx_users_status
     ON users(status);
 
-CREATE INDEX idx_users_last_login
-    ON users(last_login);
+CREATE INDEX idx_user_logins_user
+    ON user_logins(user_id);
+
+CREATE INDEX idx_user_logins_login_at
+    ON user_logins(login_at);
+
+CREATE INDEX idx_user_logins_user_login_at
+    ON user_logins(user_id, login_at DESC);
 
 CREATE INDEX idx_orders_user
     ON orders(user_id);
