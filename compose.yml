@@ -23,14 +23,16 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@example.com
-      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_DEFAULT_EMAIL: demo@demo.com
+      PGADMIN_DEFAULT_PASSWORD: demo
       PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_REPLACE_SERVERS_ON_STARTUP: "True"
     ports:
       - "8080:80"
     volumes:
       - pgadmin_data:/var/lib/pgadmin
       - ./compose/pgadmin/pgpass:/var/lib/pgadmin/storage/pgpass:ro
+      - ./compose/pgadmin/servers.json:/pgadmin4/servers.json:ro
 
 volumes:
   postgres_data:

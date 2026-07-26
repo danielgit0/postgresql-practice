@@ -29,62 +29,177 @@ Do **not** skip the exercises.
 
 ---
 
-# Recommended Database
+# Getting Started
 
-Use PostgreSQL 17+.
+## Prerequisites
 
-Example Docker:
+- Podman & Podman Compose
+- A PostgreSQL client for GUI access (DBeaver, DataGrip, pgAdmin) — **`psql` is not required on the host**, it runs inside the container
+
+## 1. Start the Environment
+
+A `compose.yml` is provided at the root of the repository. It spins up:
+
+- **PostgreSQL 17** on port `5432` — database `demo`, user `demo`, password `demo`
+- **pgAdmin 4** on port `8080` — login with `demo@demo.com` / `demo`
+
+On first boot, PostgreSQL automatically runs all scripts in `compose/postgres/` in alphabetical order:
+
+| Script | What it does |
+|---|---|
+| `01-schema.sql` | Creates all tables, types, and indexes |
+| `02-functions.sql` | Registers helper functions used by the generator |
+| `03-generate-data.sql` | Registers the `generate_demo_data()` procedure |
+| `04-clean.sql` | Registers the `cleanup_demo_data()` procedure |
+
+> **Note:** These scripts only define schema and routines — no data is inserted at startup.
 
 ```bash
-docker run \
-  --name postgres-practice \
-  -e POSTGRES_PASSWORD=postgres \
-  -e POSTGRES_USER=postgres \
-  -e POSTGRES_DB=practice \
-  -p 5432:5432 \
-  postgres:17
+podman compose up -d
 ```
 
-Recommended tools:
-
-- psql
-- DBeaver
-- DataGrip
-- pgAdmin
+Wait for the health-check to pass (about 10–15 seconds). The database is ready to use.
 
 ---
 
-# Dataset
+## 2. Generate Data
 
-Instead of tiny toy tables, create something that resembles production.
+Open an interactive `psql` session inside the container:
 
-Suggested schema:
+```bash
+podman compose exec postgres psql -U demo -d demo
+```
+
+Then call the generator procedure. With defaults it produces a realistic small-to-medium dataset:
+
+```sql
+CALL generate_demo_data();
+```
+
+Or pass any combination of parameters to control the volume:
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `p_departments` | `int` | `15` | Number of departments to create |
+| `p_employees` | `int` | `100` | Total employees (≈10% become managers) |
+| `p_users` | `int` | `1000` | Number of customer accounts |
+| `p_suppliers` | `int` | `50` | Number of product suppliers |
+| `p_categories` | `int` | `30` | Total categories (≈20% root, rest subcategories) |
+| `p_products` | `int` | `200` | Number of products |
+| `p_orders` | `int` | `5000` | Number of orders |
+| `p_max_order_items` | `int` | `5` | Max line items per order |
+| `p_sessions` | `int` | `3000` | Number of user sessions |
+| `p_api_requests` | `int` | `15000` | Number of API request log entries |
+| `p_audit_logs` | `int` | `10000` | Number of audit log entries |
+| `p_inventory` | `boolean` | `true` | Generate inventory & inventory transactions |
+| `p_payments` | `boolean` | `true` | Generate payment records |
+| `p_shipments` | `boolean` | `true` | Generate shipment tracking records |
+
+### Examples
+
+**Quick smoke test** — tiny dataset to verify everything works:
+
+```sql
+CALL generate_demo_data(
+    p_departments => 5,
+    p_employees   => 20,
+    p_users       => 100,
+    p_products    => 50,
+    p_orders      => 200
+);
+```
+
+**Medium dataset** — good for most exercises in this guide:
+
+```sql
+CALL generate_demo_data(
+    p_users        => 10000,
+    p_products     => 1000,
+    p_orders       => 50000,
+    p_api_requests => 100000,
+    p_audit_logs   => 50000
+);
+```
+
+**Large dataset** — for performance and optimization exercises (Parts 18–20, 28):
+
+```sql
+CALL generate_demo_data(
+    p_users        => 100000,
+    p_suppliers    => 500,
+    p_categories   => 100,
+    p_products     => 10000,
+    p_orders       => 500000,
+    p_sessions     => 200000,
+    p_api_requests => 1000000,
+    p_audit_logs   => 500000
+);
+```
+
+> **Note:** The generator appends new rows each time it is called. Run `CALL cleanup_demo_data()` first if you want a clean slate.
+
+### Generation Steps
+
+The procedure reports progress via `NOTICE` messages as it works through 11 steps:
+
+1. Departments
+2. Employees & management hierarchy
+3. Users
+4. Categories & subcategory hierarchy
+5. Suppliers
+6. Products & SKUs
+7. Inventory stock & transactions *(skippable)*
+8. Orders & order items
+9. Payments *(skippable)*
+10. Shipments *(skippable)*
+11. User sessions, API request logs & audit trails
+
+---
+
+## 3. Clean Up
+
+To wipe all data and reset identity sequences:
+
+```sql
+CALL cleanup_demo_data();
+```
+
+---
+
+## Schema Overview
+
+The schema covers a realistic e-commerce domain:
 
 ```
 users
-orders
+orders          → order_items
 payments
-products
-categories
+products        → inventory → inventory_transactions
+categories      (self-referencing hierarchy)
 suppliers
-inventory
 shipments
-employees
+employees       (self-referencing manager hierarchy)
 departments
 audit_logs
 sessions
 api_requests
 ```
 
-The more realistic your data is, the better your practice.
+Target sizes for meaningful optimization practice:
 
-Target:
+- 1M+ users
+- 10M+ orders
+- 100M+ audit logs
 
-- 1M users
-- 10M orders
-- 100M audit logs
+Large datasets make index tuning, partition pruning, and query optimization exercises meaningful.
 
-Large datasets make optimization meaningful.
+## Run your scripts
+
+As you progress, you can always create the scripts within the project itself and rund them with `podman exec`. This will help you save your progress.
+
+```shell
+podman compose exec postgres psql -U demo -d demo -f /path/to/your/script.sql
+```
 
 ---
 
