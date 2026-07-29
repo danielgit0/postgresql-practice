@@ -290,6 +290,102 @@ Generate a report containing
 in one query.
 
 ---
+## CASE
+
+`CASE` allows you to implement conditional logic directly in SQL. It is similar to an `if/else` statement in programming languages.
+
+```sql
+CASE expression
+    WHEN value THEN result
+    WHEN value THEN result
+    ELSE result
+END
+```
+
+Return:
+
+- username
+- status
+- account_state
+
+Rules:
+
+- ACTIVE → "Can Login"
+- INACTIVE → "Disabled"
+- SUSPENDED → "Locked"
+
+---
+
+## COALESCE
+
+`COALESCE()` returns the first non-NULL value.
+
+```sql
+COALESCE(value1, value2, value3, ...)
+```
+
+Return each orders:
+
+- id
+- status
+- employee_id
+
+If `employee_id` is `NULL`, display `-1`.
+
+---
+
+## NULLIF
+
+`NULLIF(a,b)` returns NULL if the two values are equal.
+
+Calculate in the products table
+
+```
+price / cost
+```
+
+without raising an error when cost is zero.
+
+---
+
+## EXISTS
+
+`EXISTS` checks whether at least one matching row exists.
+
+Return every user that has placed at least one order.
+
+---
+
+## ANY
+
+`ANY` compares one value against multiple values.
+
+Return employees whose salary is greater than any salary in the Sales department.
+
+---
+
+## ALL
+
+`ALL` compares one value against every value returned by a subquery.
+
+Return products more expensive than **all** products supplied by supplier 1.
+
+---
+
+## LATERAL
+
+`LATERAL` allows a subquery to reference columns from the current row.
+
+It is extremely useful when you want the "top N related rows" for every row.
+
+Return
+
+- username
+- latest login
+
+Use `LATERAL`.
+
+---
 
 # Part 2 – Complex Joins
 
