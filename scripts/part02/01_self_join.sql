@@ -9,7 +9,7 @@ from employees e1
 order by e3.id
 limit 20;
 
--- using a recursive table with custom table expression (CTE - more on Pat 5)
+-- using a recursive table with common table expression (CTE - more on Pat 5)
 -- in this case to find the subordinates of employee id = 1
 /*
 Example result
