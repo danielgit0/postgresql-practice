@@ -164,6 +164,21 @@ To wipe all data and reset identity sequences:
 CALL cleanup_demo_data();
 ```
 
+## 4. Running command without the PgAdmin
+
+```shell
+podman compose exec postgres psql -U demo -d demo -c "CALL generate_demo_data(
+    p_users        => 10000,
+    p_products     => 1000,
+    p_orders       => 50000,
+    p_api_requests => 100000,
+    p_audit_logs   => 50000
+);"
+
+```
+
+To call the function 
+
 ---
 
 ## Schema Overview
