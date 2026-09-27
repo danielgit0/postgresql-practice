@@ -45,4 +45,4 @@ with recursive subordinates(id, manager_id, full_name) as (
     from employees e
             inner join subordinates s on s.id = e.manager_id
 )
-select * from subordinates;
+-- select * from subordinates;
